@@ -13,12 +13,14 @@
     "compression": "^1.7.4",
     "cookie-session": "^2.1.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-async-errors": "^3.1.1",
     "helmet": "^8.0.0",
     "hpp": "^0.2.3",
     "http": "^0.0.1-security",
     "http-status-codes": "^2.3.0",
+    "mongoose": "^8.8.4",
     "typescript": "^5.6.3"
   },
   "devDependencies": {
