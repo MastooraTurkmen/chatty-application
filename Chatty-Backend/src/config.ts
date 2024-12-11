@@ -12,6 +12,7 @@ class Config {
   public JWT_SECRET: string | undefined;
   public PORT: string | undefined;
   public JWT_EXPIRES_IN: string | undefined;
+  public REDIS_HOST: string | undefined;
 
   constructor() {
     this.DATABASE_URL = process.env.DATABASE_URL;
@@ -22,6 +23,7 @@ class Config {
     this.JWT_SECRET = process.env.JWT_SECRET || "";
     this.PORT = process.env.PORT || "5000";
     this.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "";
+    this.REDIS_HOST = process.env.REDIS_HOST || "";
   }
 
   public validateConfig(): void {
