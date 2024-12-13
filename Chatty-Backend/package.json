@@ -23,6 +23,7 @@
     "bullmq": "^5.34.1",
     "bunyan": "^1.8.15",
     "canvas": "^2.11.2",
+    "cloudinary": "^2.5.1",
     "compression": "^1.7.4",
     "cookie-session": "^2.1.0",
     "cors": "^2.8.5",
