@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import bunyan from "bunyan";
 
 dotenv.config({});
 
@@ -24,6 +25,10 @@ class Config {
     this.PORT = process.env.PORT || "5000";
     this.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "";
     this.REDIS_HOST = process.env.REDIS_HOST || "";
+  }
+
+  public createLogger(name: string): bunyan {
+    return bunyan.createLogger({ name, level: "debug" });
   }
 
   public validateConfig(): void {
