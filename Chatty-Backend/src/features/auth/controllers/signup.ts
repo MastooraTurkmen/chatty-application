@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongoose';
-import { Request, Response } from 'express';
+import { Request, RFqayKVlyMV0SrV4S7a4dByanad/dUY11LmF1HKcvH6lVzp8x2c+Gesponse } from 'express';
 import { joiValidation } from '@global/decorators/joi-validation.decorators';
 import { signupSchema } from '@auth/schemes/signup';
 import { IAuthDocument, ISignUpDate } from '@auth/interfaces/auth.interface';
@@ -7,6 +7,9 @@ import { authService } from '@service/db/auth.service';
 import { BadRequestError } from '@global/helpers/error-handler';
 import { Helpers } from '@global/helpers/helpers';
 import { UploadApiResponse } from 'cloudinary';
+import HTTP_STATUS from 'http-status-codes';
+import { uploads } from '@global/helpers/cloudinary-upload';
+import { IUserDocument } from '@user/interface/user.interface';
 
 export class SignUp {
   @joiValidation(signupSchema)
@@ -32,6 +35,8 @@ export class SignUp {
     if (!result?.public_id) {
       throw new BadRequestError('File Upload: Error occurred. Try again ');
     }
+
+    res.status(HTTP_STATUS.CREATED).json({ message: 'User Created successfully', authData });
   }
 
   private signupData(data: ISignUpDate): IAuthDocument {
@@ -45,5 +50,43 @@ export class SignUp {
       avatarColor,
       createdAt: new Date()
     } as unknown as IAuthDocument;
+  }
+
+  private userData(data: IAuthDocument, userObjectId: ObjectId): IUserDocument {
+    const { _id, username, email, uId, password, avatarColor } = data;
+    return {
+      _id: userObjectId,
+      authId: _id,
+      uId,
+      username: Helpers.firstLetterUppercase(username),
+      email,
+      password,
+      avatarColor,
+      profilePicture:"",
+      blocked: [],
+      blockedBy: [],
+      work: "",
+      location: '',
+      school: '',
+      quote: "",
+      bgImageVersion: "",
+      bgImageId: '',
+      followersCount: 0,
+      followingCount: 0,
+      postsCount: 0,
+      notifications: {
+        messages: true,
+        reactions: true,
+        comments: true,
+        follows: true
+      },
+      social: {
+        facebook: "",
+        instagram: "",
+        twitter: "",
+        youtube: "",
+
+      } as unknown as IUserDocument
+    }
   }
 }
