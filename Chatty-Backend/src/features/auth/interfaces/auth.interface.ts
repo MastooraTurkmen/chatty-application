@@ -20,7 +20,7 @@ export interface AuthPayload {
 
 export interface IAuthDocument extends Document {
   _id: string | ObjectId;
-  uld: string;
+  uId: string;
   username: string;
   email: string;
   password?: string;
