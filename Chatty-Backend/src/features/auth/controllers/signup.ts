@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongoose';
-import { Request, RFqayKVlyMV0SrV4S7a4dByanad/dUY11LmF1HKcvH6lVzp8x2c+Gesponse } from 'express';
+import { Request, Response } from 'express';
 import { joiValidation } from '@global/decorators/joi-validation.decorators';
 import { signupSchema } from '@auth/schemes/signup';
 import { IAuthDocument, ISignUpDate } from '@auth/interfaces/auth.interface';
@@ -10,6 +10,14 @@ import { UploadApiResponse } from 'cloudinary';
 import HTTP_STATUS from 'http-status-codes';
 import { uploads } from '@global/helpers/cloudinary-upload';
 import { IUserDocument } from '@user/interface/user.interface';
+import { UserCache } from '@service/redis/user.cache';
+import { omit } from 'lodash';
+import { authQueue } from '@service/queues/auth.queue';
+import { userQueue } from '@service/queues/user.queue';
+import JWT from 'jsonwebtoken';
+import { config } from '@root/config';
+
+const userCache: UserCache = new UserCache();
 
 export class SignUp {
   @joiValidation(signupSchema)
@@ -28,7 +36,8 @@ export class SignUp {
       uId,
       username,
       email,
-      avatarColor
+      avatarColor,
+      password
     });
 
     const result: UploadApiResponse = (await uploads(avatarImage, `${userObjectId}`, true, true)) as UploadApiResponse;
@@ -36,7 +45,32 @@ export class SignUp {
       throw new BadRequestError('File Upload: Error occurred. Try again ');
     }
 
-    res.status(HTTP_STATUS.CREATED).json({ message: 'User Created successfully', authData });
+    // Add to redis cache
+    const userDataForCache: IUserDocument = SignUp.prototype.userData(authData, userObjectId);
+    userDataForCache.profilePicture = `https://res/cloudinary.com/dx1kawqpb/image/upload/v${result.version}/${userObjectId}`;
+    await userCache.saveUserToCache(`${userObjectId}`, uId, userDataForCache);
+
+    // Add to database
+    omit(userDataForCache, ['uId', 'username', 'email', 'avatarColor', 'password']);
+    authQueue.addAuthUserJob('addAuthUserToDB', { value: userDataForCache });
+    userQueue.addUserJob('addUserToDB', { value: userDataForCache });
+
+    const userJwt: string = SignUp.prototype.signToken(authData, userObjectId);
+    req.session = { jwt: userJwt };
+    res.status(HTTP_STATUS.CREATED).json({ message: 'User Created successfully', user: userDataForCache, token: userJwt });
+  }
+
+  private signToken(data: IAuthDocument, userObjectId: ObjectId): string {
+    return JWT.sign(
+      {
+        userId: userObjectId,
+        uId: data.uId,
+        email: data.email,
+        username: data.username,
+        avatarColor: data.avatarColor
+      },
+      config.JWT_TOKEN!
+    );
   }
 
   private signupData(data: ISignUpDate): IAuthDocument {
@@ -62,14 +96,14 @@ export class SignUp {
       email,
       password,
       avatarColor,
-      profilePicture:"",
+      profilePicture: '',
       blocked: [],
       blockedBy: [],
-      work: "",
+      work: '',
       location: '',
       school: '',
-      quote: "",
-      bgImageVersion: "",
+      quote: '',
+      bgImageVersion: '',
       bgImageId: '',
       followersCount: 0,
       followingCount: 0,
@@ -81,12 +115,11 @@ export class SignUp {
         follows: true
       },
       social: {
-        facebook: "",
-        instagram: "",
-        twitter: "",
-        youtube: "",
-
+        facebook: '',
+        instagram: '',
+        twitter: '',
+        youtube: ''
       } as unknown as IUserDocument
-    }
+    };
   }
 }
