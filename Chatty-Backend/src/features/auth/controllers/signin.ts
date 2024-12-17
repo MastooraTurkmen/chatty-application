@@ -11,9 +11,10 @@ import { IUserDocument } from '@user/interface/user.interface';
 import { userService } from '@service/db/user.service';
 
 export class SignIn {
+  //@ts-ignore
   @joiValidation(loginSchema)
   public async read(req: Request, res: Response): Promise<void> {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
     const existingUser: IAuthDocument = await authService.getUserByUsernameOrEmail(username, email);
     if (!existingUser) {
       throw new BadRequestError('Invalid credentials');
